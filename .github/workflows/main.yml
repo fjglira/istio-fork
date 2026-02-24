@@ -1,4 +1,8 @@
-gencheck:
+name: Istio Manual Tests
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  gencheck:
     runs-on: ubuntu-latest
     container:
       image: gcr.io/istio-testing/build-tools:master-latest
@@ -8,19 +12,8 @@ gencheck:
 
       - name: Fix Git Trust and Run Gen Check
         run: |
-          # 1. Fix the "dubious ownership" error
           git config --global --add safe.directory /__w/istio-fork/istio-fork
-          
-          # 2. Run the check with a defined TAG
-          make gen-check \
-          TAG="manual-test" \
-          HUB="docker.io/istio" \
-          ARTIFACTS="./artifacts" \
-          BUILD_WITH_CONTAINER="0" \
-          GOBIN="/usr/local/bin" \
-          GOCACHE="/tmp/cache" \
-          GOMODCACHE="/tmp/cache" \
-          XDG_CACHE_HOME="/tmp/cache"
+          make gen-check TAG="manual-test" HUB="docker.io/istio" ARTIFACTS="./artifacts" BUILD_WITH_CONTAINER="0" GOBIN="/usr/local/bin" GOCACHE="/tmp/cache" GOMODCACHE="/tmp/cache" XDG_CACHE_HOME="/tmp/cache"
 
   unit-test:
     runs-on: ubuntu-latest
@@ -32,10 +25,5 @@ gencheck:
 
       - name: Fix Git Trust and Run Unit Tests
         run: |
-          # Fix ownership
           git config --global --add safe.directory /__w/istio-fork/istio-fork
-          
-          # Run with TAG and HUB defined
-          make -e BUILD_WITH_CONTAINER="0" T=-v build racetest binaries-test \
-          TAG="manual-test" \
-          HUB="docker.io/istio"
+          make -e BUILD_WITH_CONTAINER="0" T=-v build racetest binaries-test TAG="manual-test" HUB="docker.io/istio"
