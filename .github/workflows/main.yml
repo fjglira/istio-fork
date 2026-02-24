@@ -1,20 +1,20 @@
-name: Istio Manual Tests
-on: [push, pull_request, workflow_dispatch]
-
-jobs:
-  gencheck:
+gencheck:
     runs-on: ubuntu-latest
     container:
-      # Use the same image Istio uses for building
       image: gcr.io/istio-testing/build-tools:master-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run Gen Check
+      - name: Fix Git Trust and Run Gen Check
         run: |
-          # We manually set the variables exactly like your Prow config
+          # 1. Fix the "dubious ownership" error
+          git config --global --add safe.directory /__w/istio-fork/istio-fork
+          
+          # 2. Run the check with a defined TAG
           make gen-check \
+          TAG="manual-test" \
+          HUB="docker.io/istio" \
           ARTIFACTS="./artifacts" \
           BUILD_WITH_CONTAINER="0" \
           GOBIN="/usr/local/bin" \
@@ -30,7 +30,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run Unit Tests
+      - name: Fix Git Trust and Run Unit Tests
         run: |
-          # The -e flag ensures environment variables are passed to the sub-make
-          make -e BUILD_WITH_CONTAINER=0 T=-v build racetest binaries-test
+          # Fix ownership
+          git config --global --add safe.directory /__w/istio-fork/istio-fork
+          
+          # Run with TAG and HUB defined
+          make -e BUILD_WITH_CONTAINER="0" T=-v build racetest binaries-test \
+          TAG="manual-test" \
+          HUB="docker.io/istio"
